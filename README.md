@@ -27,7 +27,7 @@ Repérés dans le code par le commentaire `EXEMPLE – à remplacer`.
 
 | Où | Quoi | Fichier |
 |---|---|---|
-| Hero | Image et vidéo du séjour de chalet : visuels d'illustration, pas un chantier du client | `assets/img/hero-*`, `assets/video/accueil-*.mp4` |
+| Hero | Image et vidéo du séjour de chalet : visuels d'illustration, pas un chantier du client | `assets/img/hero-*`, `assets/video/accueil-*.mp4` (versions HEVC et H.264) |
 | En-tête, pied de page, favicon | Logo redessiné en vectoriel d'après l'enseigne de la boutique : à remplacer par le fichier original s'il le fournit | `index.html`, `favicon.svg`, `apple-touch-icon.png` |
 | Avant / après cuisine | La photo « après » est une version retouchée en haute définition de sa vraie photo (Targasonne) | `assets/img/ap-cuisine-targasonne-apres.webp` |
 | Pourquoi nous | Phrase de Mika (« Je suis votre seul interlocuteur… ») : texte rédigé pour la maquette, à valider avec lui | `index.html` (section `#pourquoi`) |

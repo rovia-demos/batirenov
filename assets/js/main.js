@@ -105,7 +105,11 @@
   // muted inline autoplay is allowed everywhere; set it in JS too for older iOS
   vid.muted = true; vid.defaultMuted = true; vid.setAttribute('muted', ''); vid.autoplay = true;
   // start right away: the file is streamable, no need to wait for the whole page
-  vid.src = isMobile() ? vid.dataset.srcM : vid.dataset.srcD;
+  // HEVC (sharper at half the weight) where the browser supports it, H.264 everywhere else
+  var mob = isMobile(), h264 = mob ? vid.dataset.srcM : vid.dataset.srcD, hevc = mob ? vid.dataset.hevcM : vid.dataset.hevcD;
+  var useHevc = hevc && vid.canPlayType('video/mp4; codecs="hvc1.1.6.L120.90"') !== '';
+  vid.src = useHevc ? hevc : h264;
+  vid.addEventListener('error', function () { if (vid.src.indexOf(h264) === -1) { vid.src = h264; playHero(); } });
   vid.addEventListener('playing', function () { vid.classList.add('is-on'); });
   vid.addEventListener('canplay', function () { if (vid.paused && !heroPaused) playHero(); });
   vid.addEventListener('play', setHpp); vid.addEventListener('pause', setHpp);
@@ -116,6 +120,17 @@
   // very slow ambient loop with a pause button: played even when "reduce motion" is on (requested)
   playHero();
   setHpp();
+
+  // everything heavy waits until the hero video runs (or 5 s), so the video gets the bandwidth first
+  var heroDone = false, heroQueue = [];
+  function afterHero(fn) { if (heroDone) fn(); else heroQueue.push(fn); }
+  function releaseHero() { if (heroDone) return; heroDone = true; heroQueue.forEach(function (fn) { fn(); }); }
+  vid.addEventListener('playing', releaseHero, { once: true });
+  setTimeout(releaseHero, 5000);
+  afterHero(function () { $$('.sv__img img').forEach(function (im) { im.loading = 'eager'; }); });
+  new IntersectionObserver(function (en, o) {
+    if (en[0].isIntersecting) { $$('.sv__img img').forEach(function (im) { im.loading = 'eager'; }); o.disconnect(); }
+  }, { rootMargin: '1500px 0px' }).observe($('#services'));
 
   if (hasGsap && motion && !isMobile()) {
     gsap.to('.hero__in', { yPercent: 18, opacity: 0.15, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
@@ -371,7 +386,7 @@
     }, { rootMargin: '1200px 0px' });
     pre.observe(pv);
     // and in any case shortly after the page has loaded
-    addEventListener('load', function () { setTimeout(function () { if (!pv.src) { pv.preload = 'auto'; pv.src = pv.dataset.src; pv.load(); } }, 2500); });
+    afterHero(function () { setTimeout(function () { if (!pv.src) { pv.preload = 'auto'; pv.src = pv.dataset.src; pv.load(); } }, 2500); });
     new IntersectionObserver(function (en) {
       var vis = en[0].isIntersecting;
       if (vis && !userPaused && motion) {

@@ -9,7 +9,9 @@ Page non indexée (`noindex` + `robots.txt`) tant que c'est une maquette. Le for
 
 ## Infos réelles utilisées
 
-- SARL Bâtirénov, gérant Mikaël Gonzalez (« Mika »)
+- SARL Bâtirénov, SIREN 922 075 734, créée le 1er janvier 2023 (registre officiel), gérant Michael / Mikaël Gonzalez (« Mika »), siège social à Égat
+- Premiers chantiers publiés sur Instagram : 2022 (affiché « Depuis 2022 »)
+- 13 salles de bain rénovées en 2024 (sa publication Instagram du 22/12/2024)
 - 82A avenue du Maréchal Joffre, 66120 Font-Romeu-Odeillo-Via
 - 06 71 52 60 96, WhatsApp https://wa.me/33671526096
 - Horaires (fiche Google) : lundi au jeudi 8h à 18h, vendredi 8h à 17h, week-end fermé
@@ -25,7 +27,9 @@ Repérés dans le code par le commentaire `EXEMPLE – à remplacer`.
 | Où | Quoi | Fichier |
 |---|---|---|
 | Hero | Image et vidéo du séjour de chalet : visuels d'illustration, pas un chantier du client | `assets/img/hero-*`, `assets/video/hero-*.mp4` |
-| En-tête, favicon | Logo texte provisoire (le vrai logo est visible sur sa devanture) | `index.html`, `favicon.svg`, `apple-touch-icon.png` |
+| En-tête, pied de page, favicon | Logo redessiné en vectoriel d'après l'enseigne de la boutique : à remplacer par le fichier original s'il le fournit | `index.html`, `favicon.svg`, `apple-touch-icon.png` |
+| Avant / après cuisine | La photo « après » est une version retouchée en haute définition de sa vraie photo (Targasonne) | `assets/img/ap-cuisine-targasonne-apres.webp` |
+| Pourquoi nous | Phrase de Mika (« Je suis votre seul interlocuteur… ») : texte rédigé pour la maquette, à valider avec lui | `index.html` (section `#pourquoi`) |
 | Formulaire, pied de page | Email `contact@batirenov.fr` | `index.html` |
 | Zone | Communes « Autres communes du secteur » (Égat, Mont-Louis, Matemale, Formiguères, Saillagouse, Angoustrine, Bourg-Madame, Err) | `index.html` (carte) |
 
@@ -36,11 +40,13 @@ Repérés dans le code par le commentaire `EXEMPLE – à remplacer`.
 - L'autorisation d'utiliser ses photos et vidéos Instagram / Google sur le site
 - Les photos de l'appartement de Font-Romeu de 2022 ont été prises par un photographe (@bzieglerpro) : crédit ou accord à prévoir
 - La commune du chantier « WC bois et pierre » (non précisée sur Instagram)
+- Ses années d'expérience dans le métier (avant la création de la SARL en 2023)
+- L'orthographe de son prénom : « Michael » au registre, « Mikaël » dans le brief
 - Services cités sur son Instagram mais pas sur la maquette : électroménager, bardage bois. Faut-il les ajouter ?
 
 ## Modifier le contenu
 
-- Services : section `#services`, un `<li class="srv__item">` par service
 - Avant / après : boutons `.ba__tab` (attributs `data-avant`, `data-apres`, `data-desc`), images `assets/img/ap-*-avant.webp` et `ap-*-apres.webp`
-- Galerie : section `#realisations`, un `<figure class="g-item" data-cat="…">` par photo (catégories `cuisine`, `sdb`, `vie`, `bois`)
-- Carte : positions calculées depuis les vraies coordonnées GPS des communes
+- Services : section `#services`, une photo `.sv__img` et un panneau `.sv__panel` par service (même ordre)
+- Galerie : section `#realisations`, un `<figure class="g-item" data-cat="…">` par photo (catégories `cuisine`, `sdb`, `vie`, `bois`). La grille se complète toute seule, sans trou.
+- Carte : fond de carte en relief tiré d'OpenStreetMap / OpenTopoMap (mention obligatoire sous la carte), communes placées à leurs vraies coordonnées GPS

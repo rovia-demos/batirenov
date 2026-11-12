@@ -113,7 +113,6 @@
     $$('#typeChips input').forEach(function (i) { if (i.value === v) i.checked = true; });
     var f = $('#typeChips').closest('.f'); f.classList.remove('is-err');
   }
-  $$('.srv__link').forEach(function (a) { a.addEventListener('click', function () { pickType(a.dataset.type); }); });
 
   /* ---------- Split headings into words ---------- */
   $$('[data-split]').forEach(function (h) {
@@ -152,26 +151,32 @@
   }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
   $$('[data-reveal],[data-split],.zone__map').forEach(function (el) { io.observe(el); });
 
-  /* ---------- Services: floating preview (mouse) ---------- */
-  var fl = $('.srv__float');
-  if (fl && fine && motion && hasGsap) {
-    var flImg = $('img', fl);
-    var qx = gsap.quickTo(fl, 'x', { duration: 0.6, ease: 'power3' });
-    var qy = gsap.quickTo(fl, 'y', { duration: 0.6, ease: 'power3' });
-    $$('.srv__link').forEach(function (a) {
-      a.addEventListener('mouseenter', function () {
-        flImg.src = a.dataset.img;
-        fl.classList.add('is-on');
-        gsap.to(fl, { scale: 1, rotate: gsap.utils.random(-4, 4), duration: 0.6, ease: 'power3.out' });
-      });
-      a.addEventListener('mouseleave', function () {
-        fl.classList.remove('is-on');
-        gsap.to(fl, { scale: 0.6, duration: 0.4, ease: 'power3.in' });
-      });
-    });
-    $('.srv__list').addEventListener('mousemove', function (e) { qx(e.clientX + 170); qy(e.clientY); });
-    gsap.set(fl, { xPercent: -50, yPercent: -50, x: innerWidth / 2, y: innerHeight / 2 });
+  /* ---------- Services: panels change while scrolling ---------- */
+  var svImgs = $$('.sv__img'), svPanels = $$('.sv__panel'), svBar = $('#svBar'), svCur = 0;
+  function svSet(i) {
+    if (i === svCur) return;
+    svImgs.forEach(function (f, k) { f.classList.toggle('is-prev', k === svCur); f.classList.toggle('is-on', k === i); });
+    svPanels.forEach(function (pn, k) { pn.classList.toggle('is-on', k === i); });
+    svBar.parentNode.style.setProperty('--sv', ((i + 1) / svPanels.length).toFixed(3));
+    svCur = i;
   }
+  if (svPanels.length) {
+    svBar.parentNode.style.setProperty('--sv', (1 / svPanels.length).toFixed(3));
+    var svIO = null;
+    var svObserve = function () {
+      if (svIO) svIO.disconnect();
+      // the trigger line sits in the middle of the free space (below the sticky photo on phones)
+      var m = innerWidth <= 900 ? '-66% 0px -32% 0px' : '-48% 0px -50% 0px';
+      svIO = new IntersectionObserver(function (en) {
+        en.forEach(function (e) { if (e.isIntersecting) svSet(+e.target.dataset.i); });
+      }, { rootMargin: m });
+      svPanels.forEach(function (pn) { svIO.observe(pn); });
+    };
+    svObserve();
+    addEventListener('resize', function () { if (innerWidth !== lastW2) { lastW2 = innerWidth; svObserve(); applyLimit(); } });
+  }
+  var lastW2 = innerWidth;
+  $$('.sv__cta').forEach(function (a) { a.addEventListener('click', function () { pickType(a.dataset.type); }); });
 
   /* ---------- Before / after ---------- */
   var frame = $('#baFrame'), handle = $('#baHandle');
@@ -264,17 +269,25 @@
   }, { rootMargin: '0px 0px -6% 0px' });
   items.forEach(function (it) { gio.observe(it); });
 
-  var moreBtn = $('#galMore'), expanded = false;
+  var moreBtn = $('#galMore'), grid = $('#galGrid'), expanded = false;
   function applyLimit() {
-    var lim = isMobile() ? 8 : 12, curF = $('.gal__filters .chip.is-on').dataset.filter, n = 0;
-    items.forEach(function (it) {
-      it.classList.toggle('is-more', !expanded && curF === 'all' && !it.classList.contains('is-hidden') && ++n > lim);
-    });
-    moreBtn.hidden = expanded || curF !== 'all';
+    var mobile = isMobile(), lim = mobile ? 5 : 9;
+    var cols = getComputedStyle(grid).gridTemplateColumns.split(' ').length;
+    var vis = items.filter(function (it) { return !it.classList.contains('is-hidden'); });
+    items.forEach(function (it) { it.classList.remove('is-big', 'is-more'); it.style.gridColumn = ''; });
+    if (!expanded) vis.slice(lim).forEach(function (it) { it.classList.add('is-more'); });
+    var shown = vis.filter(function (it) { return !it.classList.contains('is-more'); });
+    if (!shown.length) return;
+    shown[0].classList.add('is-big');
+    // cells used: big tile = 4 (2x2) on desktop, 2 (full row) on phone
+    var cells = shown.length - 1 + (mobile ? 2 : 4), rest = cells % cols;
+    if (rest) shown[shown.length - 1].style.gridColumn = 'span ' + (cols - rest + 1);
+    moreBtn.hidden = expanded || vis.length <= lim;
   }
   applyLimit();
   moreBtn.addEventListener('click', function () {
     expanded = true; applyLimit();
+    items.forEach(function (it) { it.classList.add('is-in'); });
     if (hasGsap) ScrollTrigger.refresh();
   });
 
@@ -282,21 +295,11 @@
     chip.addEventListener('click', function () {
       var f = chip.dataset.filter;
       $$('.gal__filters .chip').forEach(function (c) { var on = c === chip; c.classList.toggle('is-on', on); c.setAttribute('aria-pressed', on); });
-      var first = new Map();
-      items.forEach(function (it) { if (!it.classList.contains('is-hidden') && !it.classList.contains('is-more')) first.set(it, it.getBoundingClientRect()); });
-      items.forEach(function (it) { it.classList.toggle('is-hidden', f !== 'all' && it.dataset.cat !== f); it.classList.add('is-in'); });
+      expanded = false;
+      items.forEach(function (it) { it.classList.toggle('is-hidden', f !== 'all' && it.dataset.cat !== f); });
+      if (motion) grid.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 600, easing: 'cubic-bezier(.16,1,.3,1)' });
       applyLimit();
-      if (!motion) return;
-      items.forEach(function (it) {
-        if (it.classList.contains('is-hidden') || it.classList.contains('is-more')) return;
-        var last = it.getBoundingClientRect(), fr = first.get(it);
-        if (fr) {
-          var dx = fr.left - last.left, dy = fr.top - last.top;
-          if (dx || dy) it.animate([{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }], { duration: 650, easing: 'cubic-bezier(.16,1,.3,1)' });
-        } else {
-          it.animate([{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'none' }], { duration: 550, easing: 'cubic-bezier(.16,1,.3,1)' });
-        }
-      });
+      items.forEach(function (it) { it.classList.add('is-in'); });
       if (hasGsap) ScrollTrigger.refresh();
     });
   });

@@ -84,18 +84,29 @@
   var heroGo = function () { hero.classList.add('is-go'); };
   if (poster.complete) requestAnimationFrame(heroGo); else { poster.addEventListener('load', heroGo); setTimeout(heroGo, 1200); }
 
-  var vid = $('.hero__video');
-  var saveData = navigator.connection && navigator.connection.saveData;
-  if (motion && !saveData) {
-    var startVideo = function () {
-      vid.src = isMobile() ? vid.dataset.srcM : vid.dataset.srcD;
-      vid.addEventListener('playing', function () { vid.classList.add('is-on'); }, { once: true });
-      var p = vid.play();
-      if (p && p.catch) p.catch(function () {});
-    };
-    if (d.readyState === 'complete') setTimeout(startVideo, 300);
-    else addEventListener('load', function () { setTimeout(startVideo, 300); });
-  }
+  var vid = $('.hero__video'), hpp = $('.hero__pp'), heroPaused = false;
+  var setHpp = function () {
+    var on = !vid.paused;
+    hpp.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-' + (on ? 'pause' : 'play') + '"/></svg>';
+    hpp.setAttribute('aria-label', on ? 'Mettre la vidéo en pause' : 'Lire la vidéo');
+  };
+  var playHero = function () {
+    var p = vid.play();
+    if (p && p.catch) p.catch(function () {
+      // autoplay blocked (battery saver…): start on the first touch, click or scroll
+      var go = function () { if (!heroPaused) vid.play().catch(function () {}); ['touchstart', 'click', 'scroll'].forEach(function (ev) { removeEventListener(ev, go); }); };
+      ['touchstart', 'click', 'scroll'].forEach(function (ev) { addEventListener(ev, go, { passive: true }); });
+    });
+  };
+  // start right away: the file is streamable, no need to wait for the whole page
+  vid.src = isMobile() ? vid.dataset.srcM : vid.dataset.srcD;
+  vid.addEventListener('playing', function () { vid.classList.add('is-on'); });
+  vid.addEventListener('play', setHpp); vid.addEventListener('pause', setHpp);
+  hpp.addEventListener('click', function () {
+    if (vid.paused) { heroPaused = false; vid.play(); } else { heroPaused = true; vid.pause(); }
+  });
+  if (motion) playHero(); else vid.preload = 'metadata';
+  setHpp();
 
   if (hasGsap && motion && !isMobile()) {
     gsap.to('.hero__in', { yPercent: 18, opacity: 0.15, ease: 'none', scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true } });
@@ -343,13 +354,22 @@
       if (!pv.src) pv.src = pv.dataset.src;
       if (pv.paused) { userPaused = false; pv.play(); } else { userPaused = true; pv.pause(); }
     });
+    // start downloading well before the section is on screen, so it plays instantly
+    var pre = new IntersectionObserver(function (en) {
+      if (!en[0].isIntersecting) return;
+      if (!pv.src) { pv.preload = 'auto'; pv.src = pv.dataset.src; pv.load(); }
+      pre.disconnect();
+    }, { rootMargin: '1200px 0px' });
+    pre.observe(pv);
+    // and in any case shortly after the page has loaded
+    addEventListener('load', function () { setTimeout(function () { if (!pv.src) { pv.preload = 'auto'; pv.src = pv.dataset.src; pv.load(); } }, 2500); });
     new IntersectionObserver(function (en) {
       var vis = en[0].isIntersecting;
       if (vis && !userPaused && motion) {
         if (!pv.src) pv.src = pv.dataset.src;
         var p = pv.play(); if (p && p.catch) p.catch(function () {});
       } else if (!vis && !pv.paused) pv.pause();
-    }, { threshold: 0.35 }).observe(pv);
+    }, { threshold: 0.2 }).observe(pv);
     setBtn();
   }
 

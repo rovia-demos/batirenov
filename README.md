@@ -16,7 +16,8 @@ Page non indexée (`noindex` + `robots.txt`) tant que c'est une maquette. Le for
 - 06 71 52 60 96, WhatsApp https://wa.me/33671526096
 - Horaires (fiche Google) : lundi au jeudi 8h à 18h, vendredi 8h à 17h, week-end fermé
 - Google : 5,0 sur 20 avis. Les 8 avis affichés sont recopiés mot pour mot.
-- Instagram : https://www.instagram.com/batirenovv/
+- Instagram : https://www.instagram.com/batirenovv/ (1 108 abonnés, 28 publications au 12/11/2026, chiffres affichés dans la section Instagram : à mettre à jour)
+- Section Instagram : 6 de ses vraies publications, chaque vignette ouvre la publication
 - Photos : toutes les photos de la galerie, des services, du bloc « Pourquoi » et les 4 paires avant / après viennent de son Instagram et de sa fiche Google. Les avant / après sont des images extraites de ses vidéos (Bolquère, Targasonne, Font-Romeu).
 - Vidéo du téléphone (section Résidences secondaires) : sa vraie vidéo avant / après de la salle de bain de Bolquère (déc. 2024), raccourcie et sans le son.
 

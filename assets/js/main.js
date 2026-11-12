@@ -90,22 +90,31 @@
     hpp.innerHTML = '<svg class="ico" aria-hidden="true"><use href="#i-' + (on ? 'pause' : 'play') + '"/></svg>';
     hpp.setAttribute('aria-label', on ? 'Mettre la vidéo en pause' : 'Lire la vidéo');
   };
+  var unlockEvents = ['touchend', 'pointerup', 'click', 'keydown', 'scroll'];
+  var unlock = function () {
+    if (!heroPaused) { var q = vid.play(); if (q && q.catch) q.catch(function () {}); }
+    if (!vid.paused) unlockEvents.forEach(function (ev) { removeEventListener(ev, unlock, true); });
+  };
   var playHero = function () {
     var p = vid.play();
     if (p && p.catch) p.catch(function () {
-      // autoplay blocked (battery saver…): start on the first touch, click or scroll
-      var go = function () { if (!heroPaused) vid.play().catch(function () {}); ['touchstart', 'click', 'scroll'].forEach(function (ev) { removeEventListener(ev, go); }); };
-      ['touchstart', 'click', 'scroll'].forEach(function (ev) { addEventListener(ev, go, { passive: true }); });
+      // autoplay refused (battery saver, in-app browser…): start on the first user gesture
+      unlockEvents.forEach(function (ev) { addEventListener(ev, unlock, { capture: true, passive: true }); });
     });
   };
+  // muted inline autoplay is allowed everywhere; set it in JS too for older iOS
+  vid.muted = true; vid.defaultMuted = true; vid.setAttribute('muted', ''); vid.autoplay = true;
   // start right away: the file is streamable, no need to wait for the whole page
   vid.src = isMobile() ? vid.dataset.srcM : vid.dataset.srcD;
   vid.addEventListener('playing', function () { vid.classList.add('is-on'); });
+  vid.addEventListener('canplay', function () { if (vid.paused && !heroPaused) playHero(); });
   vid.addEventListener('play', setHpp); vid.addEventListener('pause', setHpp);
-  hpp.addEventListener('click', function () {
+  hpp.addEventListener('click', function (e) {
+    e.stopPropagation();
     if (vid.paused) { heroPaused = false; vid.play(); } else { heroPaused = true; vid.pause(); }
   });
-  if (motion) playHero(); else vid.preload = 'metadata';
+  // very slow ambient loop with a pause button: played even when "reduce motion" is on (requested)
+  playHero();
   setHpp();
 
   if (hasGsap && motion && !isMobile()) {
